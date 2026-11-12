@@ -7,8 +7,8 @@ Tested on UE 4.27 with Echo Point Nova and System Shock (2023). See [COMPATIBILI
 ## Install
 
 1. Download the latest stable UE4SS release (4.0 or newer) from the [UE4SS releases page](https://github.com/UE4SS-RE/RE-UE4SS/releases) and install it into `<Game>/<Project>/Binaries/Win64/`. Older stable releases (3.x) lack functions the mod uses.
-2. Copy `src/UEUltrawideHUDMod` into `ue4ss/Mods/`.
-3. Copy the profile for your game from `profiles/` into `Mods/UEUltrawideHUDMod/`, next to `enabled.txt`. For a game without a profile, copy `Template.ini` and fill it in as described below.
+2. From the [latest release](https://github.com/k0dat/ue-ultrawide-hud-mod/releases/latest), download the zip named after your game and extract it into `ue4ss/Mods/`. It already contains the profile, so you're done.
+3. For a game without its own zip, download the generic `UEUltrawideHUDMod-<version>.zip` instead. Copy its `UEUltrawideHUDMod` folder into `ue4ss/Mods/`, then copy `profiles/Template.ini` into `Mods/UEUltrawideHUDMod/`, next to `enabled.txt`, and fill it in as described below.
 
 The mod loads the first `.ini` file it finds in its folder, whatever its name, so keep only one there. It only moves widgets that are listed in that profile. Restart the game after editing it.
 
