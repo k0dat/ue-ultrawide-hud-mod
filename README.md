@@ -2,7 +2,7 @@
 
 A [UE4SS](https://github.com/UE4SS-RE/RE-UE4SS) Lua mod for Unreal Engine games. On an ultrawide screen it moves the HUD horizontally into a centred virtual aspect-ratio area (16:9 by default), so health, ammo and minimaps sit near the middle of the screen instead of at its far edges.
 
-Tested on UE 4.27 with Echo Point Nova and System Shock (2023). UE5 is untested. The mod is meant for single-player, offline use: injecting UE4SS into a game with anti-cheat can get you banned.
+Tested on UE 4.27 with Echo Point Nova and System Shock (2023). See [COMPATIBILITY.md](COMPATIBILITY.md) for the games with profiles. UE5 is untested. The mod is meant for single-player, offline use: injecting UE4SS into a game with anti-cheat can get you banned.
 
 ## Install
 
