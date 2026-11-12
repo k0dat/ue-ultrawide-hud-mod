@@ -37,6 +37,10 @@ Unshift=PANEL_Brackets
 
 Write `Key=value` with no spaces around `=`, and put comments (`;` or `#`) on their own lines.
 
+> **Tip:** While you experiment with a profile, UE4SS's hot reload saves you restarting the game after each change. Set `EnableHotReloadSystem = 1` in `UE4SS-settings.ini`, then press **Ctrl+R** in game to reload the mod with your edited `.ini`.
+>
+> The reload doesn't always give a clean result. The mod forgets where the HUD was before it moved it, so a HUD that is already on screen can end up in the wrong place. If something looks off, quit to the main menu and load back in. Once the profile looks right, quit and restart the game to confirm it works from a fresh start.
+
 | Section | Key | Default | Meaning |
 |---|---|---|---|
 | `[General]` | `VirtualAspect` | `16:9` | Aspect ratio the HUD is moved into, as `W:H` or a number |

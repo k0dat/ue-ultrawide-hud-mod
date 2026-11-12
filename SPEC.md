@@ -9,7 +9,7 @@ A UE4SS Lua mod that moves UMG HUD widgets horizontally into a centred virtual a
 - A widget dump on **Ctrl+Del** for finding widget and child names.
 - UE4SS stable release 4.0 or newer, Lua 5.4, UE4SS's `UEHelpers`, and the bundled `ini_parser.lua` ([WickyPlays/Lua_INI_Parser](https://github.com/WickyPlays/Lua_INI_Parser)). No other dependencies.
 
-Out of scope: hot reload, an on/off toggle, a debug overlay, configurable hotkeys, console commands, config validation, Canvas/`AHUD`-drawn HUDs, widgets nested inside other widgets, safe zones, multiplayer.
+Out of scope: the mod's own hot reload (UE4SS's can be used while developing a profile, see §5), an on/off toggle, a debug overlay, configurable hotkeys, console commands, config validation, Canvas/`AHUD`-drawn HUDs, widgets nested inside other widgets, safe zones, multiplayer.
 
 ## 2. Virtual area
 
@@ -62,6 +62,8 @@ Finds the first `CanvasPanel` in the widget's tree (breadth-first from `WidgetTr
 The profile is the first `.ini` file found in the mod folder (beside `enabled.txt`), read once at startup; the name doesn't matter, so a file from `profiles/` can be copied in as it is. Lua can't list a folder, so the mod finds it through UE4SS's `IterateGameDirectories()`, following the script's own path from `Binaries` down to the mod folder. With no profile the mod stops with an error. `[General]` holds `VirtualAspect` (`W:H` or a number, default `16:9`), `PollInterval` (seconds, default 1) and `Debug` (default `false`; logs each anchor write). Every other section is a widget, named after its class with or without `_C`, with the keys `Method`, `Clip`, `Exclude` and `Unshift`. Lists are comma-separated. Names of children match case-insensitively.
 
 The parser needs `Key=value` with no spaces around `=` and has no inline comments.
+
+UE4SS's own hot reload (`EnableHotReloadSystem = 1` in `UE4SS-settings.ini`, then Ctrl+R) can be used while developing a new profile, so `.ini` edits take effect without restarting the game. Use it for development only. A reload resets the saved original anchors, so a HUD that is already on screen is treated as unmoved and moved again, and it can end up in the wrong place. A profile only counts as working once it has been checked after quitting and restarting the game.
 
 ## 6. Widget dump
 
