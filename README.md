@@ -4,11 +4,16 @@ A [UE4SS](https://github.com/UE4SS-RE/RE-UE4SS) Lua mod for Unreal Engine games.
 
 Tested on UE 4.27 with Echo Point Nova and System Shock (2023). See [COMPATIBILITY.md](COMPATIBILITY.md) for the games with profiles. UE5 is untested. The mod is meant for single-player, offline use: injecting UE4SS into a game with anti-cheat can get you banned.
 
-## Install
+## Install (games listed in COMPATIBILITY.md)
 
-1. Download the latest stable UE4SS release (4.0 or newer) from the [UE4SS releases page](https://github.com/UE4SS-RE/RE-UE4SS/releases) and install it into `<Game>/<Project>/Binaries/Win64/`. Older stable releases (3.x) lack functions the mod uses.
-2. From the [latest release](https://github.com/k0dat/ue-ultrawide-hud-mod/releases/latest), download the zip named after your game and extract it into `ue4ss/Mods/`. It already contains the profile, so you're done.
-3. For a game without its own zip, download the generic `UEUltrawideHUDMod-<version>.zip` instead. Copy its `UEUltrawideHUDMod` folder into `ue4ss/Mods/`, then copy `profiles/Template.ini` into `Mods/UEUltrawideHUDMod/`, next to `enabled.txt`, and fill it in as described below.
+1. Download the latest stable UE4SS release (4.0 or newer) from the [UE4SS releases page](https://github.com/UE4SS-RE/RE-UE4SS/releases) and install it into the game's path listed in [COMPATIBILITY.md](COMPATIBILITY.md).
+2. From the [latest release](https://github.com/k0dat/ue-ultrawide-hud-mod/releases/latest), download the zip named after your game and extract it into `ue4ss/Mods/`. It already contains the profile.
+
+## Install (other games)
+
+1. Download the latest stable UE4SS release (4.0 or newer) from the [UE4SS releases page](https://github.com/UE4SS-RE/RE-UE4SS/releases) and install it into `<Game>/<Project>/Binaries/Win64/`.
+2. From the [latest release](https://github.com/k0dat/ue-ultrawide-hud-mod/releases/latest), download the generic `UEUltrawideHUDMod-<version>.zip` and copy its `UEUltrawideHUDMod` folder into `ue4ss/Mods/`.
+3. Copy `profiles/Template.ini` from the zip into `Mods/UEUltrawideHUDMod/`, next to `enabled.txt`, and fill it in as described in [Configure a new game](#configure-a-new-game).
 
 The mod loads the first `.ini` file it finds in its folder, whatever its name, so keep only one there. It only moves widgets that are listed in that profile. Restart the game after editing it.
 
