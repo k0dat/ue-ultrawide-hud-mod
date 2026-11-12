@@ -7,7 +7,7 @@ A UE4SS Lua mod that moves UMG HUD widgets horizontally into a centred virtual a
 - Move HUD elements on the **x-axis only**. Anchor Y values, offsets, sizes and z-order are never changed.
 - One `.ini` profile per game. No changes are made to widgets that aren't listed in it.
 - A widget dump on **Ctrl+Del** for finding widget and child names.
-- UE4SS experimental build, Lua 5.4, UE4SS's `UEHelpers`, and the bundled `ini_parser.lua` ([WickyPlays/Lua_INI_Parser](https://github.com/WickyPlays/Lua_INI_Parser)). No other dependencies.
+- UE4SS stable release 4.0 or newer, Lua 5.4, UE4SS's `UEHelpers`, and the bundled `ini_parser.lua` ([WickyPlays/Lua_INI_Parser](https://github.com/WickyPlays/Lua_INI_Parser)). No other dependencies.
 
 Out of scope: hot reload, an on/off toggle, a debug overlay, configurable hotkeys, console commands, config validation, Canvas/`AHUD`-drawn HUDs, widgets nested inside other widgets, safe zones, multiplayer.
 

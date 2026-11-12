@@ -6,7 +6,7 @@ Tested on UE 4.27 with Echo Point Nova and System Shock (2023). UE5 is untested.
 
 ## Install
 
-1. Install the UE4SS **experimental** build into `<Game>/<Project>/Binaries/Win64/`.
+1. Download the latest stable UE4SS release (4.0 or newer) from the [UE4SS releases page](https://github.com/UE4SS-RE/RE-UE4SS/releases) and install it into `<Game>/<Project>/Binaries/Win64/`. Older stable releases (3.x) lack functions the mod uses.
 2. Copy `src/UEUltrawideHUDMod` into `ue4ss/Mods/`.
 3. Copy the profile for your game from `profiles/` into `Mods/UEUltrawideHUDMod/`, next to `enabled.txt`. For a game without a profile, copy `Template.ini` and fill it in as described below.
 

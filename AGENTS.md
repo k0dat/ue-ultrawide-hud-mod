@@ -34,7 +34,7 @@ This is not a mission-critical application.
 
 ## Dependencies
 
-- UE4SS **experimental** build and its Lua API. Docs: https://docs.ue4ss.com/dev/
+- UE4SS stable release **4.0 or newer** and its Lua API. Don't use functions that only exist in newer experimental builds. Docs: https://docs.ue4ss.com/
 - Use `UEHelpers` from UE4SS where it already provides something (e.g. `GetPlayerController`) instead of writing it again.
 - `Scripts/ini_parser.lua` is third-party ([WickyPlays/Lua_INI_Parser](https://github.com/WickyPlays/Lua_INI_Parser)). Leave it unmodified.
 - Ask before adding any new dependency.
