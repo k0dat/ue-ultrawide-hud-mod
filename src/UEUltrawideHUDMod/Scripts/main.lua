@@ -8,6 +8,7 @@ local Remap = require("remap")
 local Dump = require("dump")
 
 local MOD_DIR = debug.getinfo(1, "S").source:match("@?(.*[/\\])") .. "../"
+local LAYOUT_LIBRARY = "/Script/UMG.Default__WidgetLayoutLibrary"
 
 local function log(fmt, ...)
     print(string.format("[UEUltrawideHUDMod] " .. fmt .. "\n", ...))
@@ -75,7 +76,7 @@ local config = loadConfig(profile)
 local function viewportSize()
     local controller = UEHelpers.GetPlayerController()
     if not controller:IsValid() then return nil end
-    local size = StaticFindObject("/Script/UMG.Default__WidgetLayoutLibrary"):GetViewportSize(controller)
+    local size = StaticFindObject(LAYOUT_LIBRARY):GetViewportSize(controller)
     if size.X <= 0 or size.Y <= 0 then return nil end
     return size
 end
@@ -102,15 +103,39 @@ local function poll()
     end
 end
 
+-- Takes a screenshot with the HUD and returns the path it will be saved to. The engine writes it a
+-- frame later to <Saved>/Screenshots/WindowsNoEditor/, named ScreenShot00000.png upwards with the
+-- first free number. Some games move Saved (System Shock: Saved Games\Nightdive Studios\SystemShock).
+local function takeScreenshot()
+    local system = StaticFindObject("/Script/Engine.Default__KismetSystemLibrary")
+    local saved = system:ConvertToAbsolutePath(system:GetProjectSavedDirectory():ToString()):ToString()
+    local dir = saved:gsub("\\", "/") .. "Screenshots/WindowsNoEditor/"
+    local path
+    for i = 0, 99999 do
+        path = string.format("%sScreenShot%05d.png", dir, i)
+        local file = io.open(path, "r")
+        if not file then break end
+        file:close()
+    end
+    local controller = UEHelpers.GetPlayerController()
+    system:ExecuteConsoleCommand(controller, "shot showui", controller)
+    return path
+end
+
 local function dump()
     local size = viewportSize()
     if not size then return log("dump: no viewport yet") end
+    local ratio = widthRatio(size)
     local header = string.format(
         "UEUltrawideHUDMod widget dump, %s\nViewport %.0fx%.0f, virtual aspect %.4f, virtual area is %.1f%% of the width\n"
             .. "Top-level widgets in the viewport. A profile section is named after the widget's class (first word).",
-        os.date("%Y-%m-%d %H:%M:%S"), size.X, size.Y, config.aspect, widthRatio(size) * 100)
-    local path, err = Dump.write(MOD_DIR .. os.date("widgets_%Y%m%d_%H%M%S.txt"), header)
-    log(path and ("dump written to " .. path) or ("dump failed: " .. err))
+        os.date("%Y-%m-%d %H:%M:%S"), size.X, size.Y, config.aspect, ratio * 100)
+    -- Widgets are laid out in Slate units: pixels divided by the DPI scale.
+    local scale = StaticFindObject(LAYOUT_LIBRARY):GetViewportScale(UEHelpers.GetPlayerController())
+    local view = { width = size.X / scale, height = size.Y / scale, ratio = ratio, screenshot = takeScreenshot() }
+    local base, err = Dump.write(MOD_DIR .. os.date("widgets_%Y%m%d_%H%M%S"), header, view)
+    if not base then return log("dump failed: %s", err) end
+    log("dump written to %s.txt and %s.svg, screenshot %s", base, base, view.screenshot)
 end
 
 -- Reports an error from a callback instead of letting it escape into UE4SS.

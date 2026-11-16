@@ -21,6 +21,7 @@ The mod loads the first `.ini` file it finds in its folder, whatever its name, s
 
 1. Load into gameplay with the HUD visible and press **Ctrl+Del**.
 2. Open the newest `widgets_*.txt` in `Mods/UEUltrawideHUDMod/`. It lists every widget in the viewport as an indented tree, with each child's anchors and offsets.
+   The `widgets_*.svg` beside it draws each visible element as a labelled box where it sits on screen, with the virtual area shaded. The dump also takes a screenshot, and the SVG shows it underneath the boxes. Open the SVG in a web browser and hover a box for its full details. The boxes are worked out from the anchors, so an element inside a box layout or with a render transform can be drawn in the wrong place.
 3. Find the widget that holds the HUD and add a section named after its class to your profile.
 
 ```ini

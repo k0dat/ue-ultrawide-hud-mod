@@ -6,7 +6,7 @@ A UE4SS Lua mod that moves UMG HUD widgets horizontally into a centred virtual a
 
 - Move HUD elements on the **x-axis only**. Anchor Y values, offsets, sizes and z-order are never changed.
 - One `.ini` profile per game. No changes are made to widgets that aren't listed in it.
-- A widget dump on **Ctrl+Del** for finding widget and child names.
+- A widget dump on **Ctrl+Del** for finding widget and child names, as text and as an SVG of where each element sits.
 - UE4SS stable release 4.0 or newer, Lua 5.4, UE4SS's `UEHelpers`, and the bundled `ini_parser.lua` ([WickyPlays/Lua_INI_Parser](https://github.com/WickyPlays/Lua_INI_Parser)). No other dependencies.
 
 Out of scope: the mod's own hot reload (UE4SS's can be used while developing a profile, see §5), an on/off toggle, a debug overlay, configurable hotkeys, console commands, config validation, Canvas/`AHUD`-drawn HUDs, widgets nested inside other widgets, safe zones, multiplayer.
@@ -69,6 +69,10 @@ UE4SS's own hot reload (`EnableHotReloadSystem = 1` in `UE4SS-settings.ini`, the
 
 Ctrl+Del writes `widgets_YYYYMMDD_HHMMSS.txt` to the mod folder and logs the path. After a header with the viewport size and virtual area, it lists each UserWidget in the viewport as an indented tree: class, name, visibility, and for children of a canvas their anchors and offsets. Nested UserWidgets are expanded in place.
 
+Beside it goes `widgets_YYYYMMDD_HHMMSS.svg`, drawn in Slate units (viewport pixels divided by `UWidgetLayoutLibrary::GetViewportScale`) with the virtual area shaded. Each visible canvas child is a box labelled with its name at the top left, coloured by tree depth, and hovering a box shows its line from the text dump. Hidden and collapsed widgets and everything below them are left out. A nested UserWidget is drawn as one box without its contents, since a profile can't name anything inside it. Positions show the HUD as it is, after the mod has moved it. The dump also runs `shot showui` through `KismetSystemLibrary::ExecuteConsoleCommand` and draws that screenshot under the boxes. The engine saves it a frame later in `<Saved>/Screenshots/WindowsNoEditor/` as `ScreenShot00000.png` upwards, taking the first free number, so the mod looks for the first number not on disk in the folder from `GetProjectSavedDirectory`, made absolute with `ConvertToAbsolutePath`. If the engine picks a different number, for example because earlier screenshots were deleted during the session, the SVG shows the wrong screenshot or none.
+
+The boxes are computed, not read from the engine, because `FGeometry` isn't reflected (§8). Each canvas child is placed by the canvas layout rule: a point-anchored axis uses the offset as position, the alignment as pivot and `Offsets.Right`/`Bottom` as size, or `GetDesiredSize()` with auto-size; a stretched axis uses the offsets as margins. Every other widget is assumed to fill its parent, and a top-level widget to fill its viewport anchors. This is right for canvases inside overlays, borders and retainer boxes. Canvases inside boxes, scroll boxes or scale boxes, viewport offsets and render transforms are not modelled, and land in the wrong place.
+
 ## 7. Error handling
 
 The poll and the dump each run inside one `pcall` that logs the error with the `[UEUltrawideHUDMod]` prefix. UObjects are checked with `IsValid()` where the game is known to hand back dead or null ones (widget instances, tree roots, slots, cached Unshift targets), and not elsewhere.
@@ -83,6 +87,7 @@ Both run UE 4.27.2. These come from in-game runs of the first implementation.
 - `FindAllOf` needs the generated class name with `_C` and returns nil when nothing matches.
 - `debug.getinfo(1, "S").source` gives the script's absolute path.
 - `GetCachedGeometry` is useless from Lua because `FGeometry` isn't reflected.
+- Confirmed by the SVG dump in System Shock: `GetViewportScale`, `CanvasPanelSlot` `GetAlignment` and `GetAutoSize`, and `GetDesiredSize` work as called from Lua. `KismetSystemLibrary` `GetProjectSavedDirectory` returns an FString (`:ToString()`) that follows a game's moved Saved folder, `ExecuteConsoleCommand` runs `shot showui`, and the screenshot includes the HUD.
 
 **Echo Point Nova** (project name "Greylock")
 

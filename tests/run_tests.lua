@@ -21,6 +21,18 @@ local function hasX(obj, minX, maxX)
     return math.abs(a.Minimum.X - minX) < 1e-4 and math.abs(a.Maximum.X - maxX) < 1e-4
 end
 
+-- Whether `svg` has a <rect> with these attribute values, in any order.
+local function hasRect(svg, attrs)
+    for tag in svg:gmatch("<rect[^>]*>") do
+        local all = true
+        for key, value in pairs(attrs) do
+            all = all and tag:find(string.format(' %s="%s"', key, value), 1, true) ~= nil
+        end
+        if all then return true end
+    end
+    return false
+end
+
 local function readFile(path)
     local file = assert(io.open(path, "r"))
     local text = file:read("a")
@@ -36,7 +48,7 @@ local function startMod(fileName, profileText)
     local file = assert(io.open(profilePath, "w"))
     file:write(profileText)
     file:close()
-    for _, name in ipairs({ "remap", "dump", "ini_parser" }) do package.loaded[name] = nil end
+    for _, name in ipairs({ "remap", "dump", "svg", "ini_parser" }) do package.loaded[name] = nil end
     mock.reset(gameDir)
     dofile(modDir .. "/Scripts/main.lua")
 end
@@ -106,15 +118,39 @@ check("viewport: applied again after a 0x0 viewport", hasX(hud, 0.25, 0.75))
 -- Dump
 ------------------------------------------------------------------------
 
+local hidden = mock.widget("Image", "Hidden", hud.WidgetTree.RootWidget.children[1], mock.anchors(0, 0, 0, 0))
+hidden.visibility = 2
+mock.defineClass("WBP_Slot_C", "UserWidget")
+local nested = mock.widget("WBP_Slot_C", "Slot", hud.WidgetTree.RootWidget.children[1], mock.anchors(0, 0, 0, 0))
+local nestedCanvas = mock.widget("CanvasPanel", "SlotCanvas")
+nested.WidgetTree = { RootWidget = nestedCanvas, IsValid = function() return true end }
+mock.widget("Image", "SlotIcon", nestedCanvas, mock.anchors(0, 0, 0, 0))
+mock.scale = 2 -- 5120x1440 pixels is 2560x720 Slate units
+local shotDir = gameDir .. "/Game/Saved/Screenshots/WindowsNoEditor/"
+os.execute('mkdir -p "' .. shotDir .. '" && touch "' .. shotDir .. 'ScreenShot00000.png"')
 mock.pressKey()
-local dumpPath = table.concat(mock.log):match("dump written to ([^\n]+)")
-check("dump: file written", dumpPath ~= nil)
-local dumpText = dumpPath and readFile(dumpPath) or ""
+local dumpBase = table.concat(mock.log):match("dump written to ([^\n]+)%.txt and")
+check("dump: file written", dumpBase ~= nil)
+local dumpText = dumpBase and readFile(dumpBase .. ".txt") or ""
+local svgText = dumpBase and readFile(dumpBase .. ".svg") or ""
 check("dump: header has the viewport", dumpText:find("Viewport 5120x1440", 1, true) ~= nil)
 check("dump: top-level widget listed by class", dumpText:find('\nWBP_HUMANHUD_C "WBP_HUMANHUD" Visible', 1, true) ~= nil)
 check("dump: child listed with its anchors",
     dumpText:find('    Image "Health" Visible  anchors (0,1)-(0,1)  offsets (0,0,100,50)', 1, true) ~= nil)
 check("dump: stale instance not listed", select(2, dumpText:gsub("WBP_HUMANHUD_C", "")) == 1)
+check("dump: hidden child listed", dumpText:find('Image "Hidden" Hidden', 1, true) ~= nil)
+check("svg: virtual area drawn in Slate units", hasRect(svgText, { x = 640, width = 1280, height = 720 }))
+check("svg: child boxed inside the moved widget",
+    hasRect(svgText, { x = 640, y = 720, width = 100, height = 50 }))
+check("svg: child labelled", svgText:find('>Health</text>', 1, true) ~= nil)
+check("svg: tooltip escaped", svgText:find('<title>Image &quot;Health&quot; Visible', 1, true) ~= nil)
+check("svg: hidden child not drawn", svgText:find(">Hidden<", 1, true) == nil)
+check("svg: nested UserWidget drawn as one box",
+    svgText:find(">Slot</text>", 1, true) ~= nil and svgText:find(">SlotIcon<", 1, true) == nil)
+check("dump: nested UserWidget expanded in the text", dumpText:find('Image "SlotIcon"', 1, true) ~= nil)
+check("screenshot: taken with the HUD", mock.commands[1] == "shot showui")
+check("screenshot: first free number drawn under the boxes",
+    svgText:find('href="file:///' .. shotDir .. 'ScreenShot00001.png"', 1, true) ~= nil)
 
 ------------------------------------------------------------------------
 -- Anchors method (System Shock)
@@ -132,6 +168,14 @@ check("anchors: widget's viewport slot untouched", hasX(ss.widget, 0, 1))
 check("anchors: nested canvas children untouched", hasX(ss.hardware.Slot, 0, 0))
 check("anchors: selection box unshifted", hasX(ss.brackets.Slot, -0.5, -0.5))
 check("anchors: Y untouched", ss.retainer.Slot.anchors.Maximum.Y == 1)
+
+ss.crosshair.Slot.alignment, ss.crosshair.Slot.autoSize, ss.crosshair.desiredSize = { X = 0.5, Y = 0.5 }, true, { X = 40, Y = 30 }
+mock.pressKey()
+svgText = readFile(table.concat(mock.log):match(".*dump written to ([^\n]+)%.txt and") .. ".svg")
+check("svg: stretched child uses its offsets as margins",
+    hasRect(svgText, { x = 1280, y = 0, width = 2460, height = 1390 }))
+check("svg: auto-sized child centred on its anchor",
+    hasRect(svgText, { x = 2540, y = 705, width = 40, height = 30 }))
 
 mock.viewport = { X = 1920, Y = 1080 }
 mock.tick()
@@ -158,6 +202,17 @@ mock.tick()
 check("config: 21:9 area on a 32:9 screen, method defaults to viewport", hasX(hud, 0.5 - 0.328125, 0.5 + 0.328125))
 check("config: Clip=false leaves clipping alone", root.Clipping == 0)
 check("config: Debug=true logs writes", table.concat(mock.log):find("anchors x 0..1 -> 0.171875..0.828125", 1, true) ~= nil)
+
+------------------------------------------------------------------------
+-- SVG writer
+------------------------------------------------------------------------
+
+local Svg = require("svg")
+check("svg writer: sorted, escaped attributes and text",
+    Svg.element("text", { y = 1.5, x = 'a"b' }, "<T&>") == '<text x="a&quot;b" y="1.5">&lt;T&amp;&gt;</text>')
+check("svg writer: no content closes the tag", Svg.element("rect", { width = 10 }) == '<rect width="10"/>')
+check("svg writer: child elements not escaped",
+    Svg.element("g", nil, { Svg.element("title", nil, "a"), "<b/>" }) == "<g><title>a</title>\n<b/></g>")
 
 for _, line in ipairs(mock.log) do
     check("no errors logged: " .. line, not line:find("error", 1, true))

@@ -44,13 +44,16 @@ function Object:IsValid() return not self.destroyed end
 function Object:GetFullName() return string.format("%s /Engine/Transient.%s_%d", self.class.name, self.name, self.id) end
 function Object:GetFName() return { ToString = function() return self.name end } end
 function Object:GetClass() return self.class end
-function Object:GetVisibility() return 0 end
+function Object:GetVisibility() return self.visibility or 0 end
 function Object:SetClipping(value) self.Clipping = value end
 function Object:GetChildrenCount() return #self.children end
 function Object:GetChildAt(i) return self.children[i + 1] end
 function Object:GetAnchors() return copyAnchors(self.anchors) end
 function Object:SetAnchors(a) self.anchors = copyAnchors(a) end
 function Object:GetOffsets() return self.offsets end
+function Object:GetAlignment() return self.alignment or { X = 0, Y = 0 } end
+function Object:GetAutoSize() return self.autoSize or false end
+function Object:GetDesiredSize() return self.desiredSize or { X = 0, Y = 0 } end
 function Object:IsInViewport() return self.inViewport end
 function Object:GetAnchorsInViewport() return copyAnchors(self.anchors) end
 function Object:SetAnchorsInViewport(a) self.anchors = copyAnchors(a) end
@@ -120,14 +123,26 @@ end
 function M.reset(gameDir)
     objects, nextId = {}, 0
     M.viewport = { X = 5120, Y = 1440 }
+    M.scale = 1
     M.loops, M.keybinds, M.log = {}, {}, {}
 
     local controller = newObject("Object", "PlayerController")
-    local layoutLibrary = { GetViewportSize = function() return M.viewport end }
+    local layoutLibrary = {
+        GetViewportSize = function() return M.viewport end,
+        GetViewportScale = function() return M.scale end,
+    }
+    local function fstring(text) return { ToString = function() return text end } end
+    M.commands = {}
+    local systemLibrary = {
+        GetProjectSavedDirectory = function() return fstring(gameDir .. "/Game/Saved/") end,
+        ConvertToAbsolutePath = function(_, path) return fstring(path) end,
+        ExecuteConsoleCommand = function(_, _, command) M.commands[#M.commands + 1] = command end,
+    }
     package.loaded.UEHelpers = { GetPlayerController = function() return controller end }
 
     function StaticFindObject(path)
         if path:find("Default__WidgetLayoutLibrary") then return layoutLibrary end
+        if path:find("Default__KismetSystemLibrary") then return systemLibrary end
         return classes[path:match("%.([%w_]+)$")]
     end
 

@@ -47,7 +47,8 @@ src/UEUltrawideHUDMod/     the mod folder, copied into ue4ss/Mods/
   Scripts/
     main.lua               profile loading, poll loop, Ctrl+Del hotkey
     remap.lua              viewport and anchors methods, Unshift
-    dump.lua               widget tree dump
+    dump.lua               widget tree dump, as text and SVG
+    svg.lua                minimal SVG writer
     ini_parser.lua         third-party
 profiles/                  one .ini per tested game, plus Template.ini
 tests/                     offline tests against a fake UE4SS
