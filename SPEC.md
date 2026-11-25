@@ -63,7 +63,7 @@ The profile is the first `.ini` file found in the mod folder (beside `enabled.tx
 
 The parser needs `Key=value` with no spaces around `=` and has no inline comments.
 
-UE4SS's own hot reload (`EnableHotReloadSystem = 1` in `UE4SS-settings.ini`, then Ctrl+R) can be used while developing a new profile, so `.ini` edits take effect without restarting the game. Use it for development only. A reload resets the saved original anchors, so a HUD that is already on screen is treated as unmoved and moved again, and it can end up in the wrong place. A profile only counts as working once it has been checked after quitting and restarting the game.
+UE4SS's own hot reload (`EnableHotReloadSystem = 1` in `UE4SS-settings.ini`, then Ctrl+R) can be used while developing a new profile, so `.ini` edits take effect without restarting the game. Use it for development only. A reload resets the saved original anchors, so a HUD that is already on screen is treated as unmoved and moved again, and it can end up in the wrong place. Reloading in the main menu and then loading a save avoids this, since the game builds a new HUD instance (confirmed in System Shock). A profile only counts as working once it has been checked after quitting and restarting the game.
 
 ## 6. Widget dump
 
@@ -89,7 +89,7 @@ Both run UE 4.27.2. These come from in-game runs of the first implementation.
 - `FindAllOf` needs the generated class name with `_C` and returns nil when nothing matches.
 - `debug.getinfo(1, "S").source` gives the script's absolute path.
 - `GetCachedGeometry` is useless from Lua because `FGeometry` isn't reflected.
-- Confirmed by the SVG dump in System Shock: `GetViewportScale`, `CanvasPanelSlot` `GetAlignment` and `GetAutoSize`, and `GetDesiredSize` work as called from Lua. `KismetSystemLibrary` `GetProjectSavedDirectory` returns an FString (`:ToString()`) that follows a game's moved Saved folder, `ConvertToAbsolutePath` takes a Lua string and returns an FString, `ExecuteConsoleCommand` runs `shot showui`, and the screenshot includes the HUD. Not yet confirmed: getting the library through `UEHelpers.GetKismetSystemLibrary()` (present in UE4SS 4.0.0's UEHelpers) rather than `StaticFindObject`.
+- Confirmed by the SVG dump in System Shock: `GetViewportScale`, `CanvasPanelSlot` `GetAlignment` and `GetAutoSize`, and `GetDesiredSize` work as called from Lua. `KismetSystemLibrary` `GetProjectSavedDirectory` returns an FString (`:ToString()`) that follows a game's moved Saved folder, `ConvertToAbsolutePath` takes a Lua string and returns an FString, `ExecuteConsoleCommand` runs `shot showui`, and the screenshot includes the HUD. `UEHelpers.GetKismetSystemLibrary()` returns the library. The mod's screenshot counter matched the engine's across a UE4SS hot reload, because the files already on disk are skipped.
 
 **Echo Point Nova** (project name "Greylock")
 
