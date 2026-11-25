@@ -66,7 +66,6 @@ With `anchors`, a child that stretches across the screen becomes a container the
 - Only UMG widgets added directly to the viewport are handled. HUDs drawn with `AHUD`/Canvas calls and widgets nested inside another widget are not.
 - A new HUD (after a respawn or loading a save) can show in its original position for up to one poll interval.
 - With `anchors`, the mod keeps writing the position it calculated from the anchors it first saw. A child that the game re-anchors itself, such as a crosshair that doubles as a mouse cursor, should go in `Exclude`.
-- An `Unshift` widget is looked up once per container, so it must exist when the HUD first appears.
 - At a 16:9 or narrower resolution the original anchors are written back, but clipping set by `Clip` stays on.
 
 ## Development

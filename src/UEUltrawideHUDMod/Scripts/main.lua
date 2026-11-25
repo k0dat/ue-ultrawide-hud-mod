@@ -89,6 +89,17 @@ local function widthRatio(size)
     return config.aspect / screenAspect
 end
 
+-- Reports an error from a callback instead of letting it escape into UE4SS.
+local function guarded(fn)
+    return function(...)
+        local ok, err = pcall(fn, ...)
+        if not ok then log("error: %s", err) end
+    end
+end
+
+-- Guarded per widget, so one that fails doesn't stop the others.
+local apply = guarded(Remap.apply)
+
 local function poll()
     local size = viewportSize()
     if not size then return end
@@ -97,7 +108,7 @@ local function poll()
         for _, widget in ipairs(FindAllOf(cfg.class) or {}) do
             -- Games keep old HUD instances alive outside the viewport; leave those alone.
             if widget:IsValid() and widget:IsInViewport() then
-                Remap.apply(widget, cfg, ratio)
+                apply(widget, cfg, ratio)
             end
         end
     end
@@ -160,14 +171,6 @@ local function dump()
     local _, svgErr = Dump.writeSvg(base .. ".svg", view, boxes)
     if svgErr then return log("svg failed: %s", svgErr) end
     log("svg written to %s.svg, screenshot %s", base, view.screenshot)
-end
-
--- Reports an error from a callback instead of letting it escape into UE4SS.
-local function guarded(fn)
-    return function()
-        local ok, err = pcall(fn)
-        if not ok then log("error: %s", err) end
-    end
 end
 
 LoopInGameThreadWithDelay(config.pollMs, guarded(poll))

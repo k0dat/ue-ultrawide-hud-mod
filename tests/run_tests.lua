@@ -40,6 +40,13 @@ local function readFile(path)
     return text
 end
 
+-- Called before each restart of the mod, which clears the log, and at the end.
+local function checkNoErrors()
+    for _, line in ipairs(mock.log or {}) do
+        check("no errors logged: " .. line, not line:find("error", 1, true))
+    end
+end
+
 -- Starts the mod in an empty fake world with `profileText` as the only .ini file in the mod folder.
 local profilePath
 local function startMod(fileName, profileText)
@@ -49,6 +56,7 @@ local function startMod(fileName, profileText)
     file:write(profileText)
     file:close()
     for _, name in ipairs({ "remap", "dump", "svg", "ini_parser" }) do package.loaded[name] = nil end
+    checkNoErrors()
     mock.reset(gameDir)
     dofile(modDir .. "/Scripts/main.lua")
 end
@@ -175,10 +183,12 @@ check("dump: a second dump gets its own files", second ~= nil and second ~= dump
 check("screenshot: a second dump predicts the next number",
     readFile(second .. ".svg"):find("ScreenShot00002.png", 1, true) ~= nil)
 
+checkNoErrors()
 mock.scale = nil -- any failure in the SVG part
 mock.pressKey()
 check("dump: text written when the SVG part fails", #dumpBases() == 3 and readFile(dumpBases()[3] .. ".txt"):find("Health", 1, true) ~= nil)
 check("dump: SVG failure logged", table.concat(mock.log):find("error:", 1, true) ~= nil)
+mock.log = {} -- that error was expected
 
 ------------------------------------------------------------------------
 -- Anchors method (System Shock)
@@ -222,6 +232,32 @@ check("anchors: right-anchored child moves to the virtual edge", hasX(timer.Slot
 check("anchors: point-anchored child is not clipped", timer.Clipping == 0)
 check("anchors: exclude is per widget", hasX(ring.Slot, 0, 1))
 
+-- The game destroys the selection box and creates a new one a few polls later.
+local gameHud = ss.retainer.children[1]
+ss.brackets.destroyed = true
+mock.tick()
+mock.tick()
+ss.brackets = mock.widget("Image", "PANEL_Brackets", gameHud, mock.anchors(0, 0, 0, 0))
+mock.tick()
+check("anchors: Unshift target found when it appears late", hasX(ss.brackets.Slot, -0.5, -0.5))
+
+-- Removed from its parent: no slot, but still valid until garbage collection.
+table.remove(gameHud.children, #gameHud.children)
+ss.brackets.Slot = nil
+ss.brackets = mock.widget("Image", "PANEL_Brackets", gameHud, mock.anchors(0, 0, 0, 0))
+mock.tick()
+mock.tick()
+check("anchors: Unshift target found again after it is detached", hasX(ss.brackets.Slot, -0.5, -0.5))
+
+checkNoErrors()
+ss.retainer.Slot.GetAnchors = function() error("not a canvas slot") end
+timer.Slot.anchors = mock.anchors(1, 0, 1, 0)
+mock.tick()
+check("errors: a failing widget is logged", table.concat(mock.log):find("not a canvas slot", 1, true) ~= nil)
+check("errors: later widgets still moved", hasX(timer.Slot, 0.75, 0.75))
+ss.retainer.Slot.GetAnchors = nil
+mock.log = {}
+
 ------------------------------------------------------------------------
 -- Config options
 ------------------------------------------------------------------------
@@ -250,9 +286,7 @@ check("svg: screenshot path made URL-safe",
     readFile(urlTest):find('href="file:///C:/Games %232/100%25/s.png"', 1, true) ~= nil)
 os.remove(urlTest)
 
-for _, line in ipairs(mock.log) do
-    check("no errors logged: " .. line, not line:find("error", 1, true))
-end
+checkNoErrors()
 
 realPrint(failures == 0 and "all tests passed" or (failures .. " test(s) failed"))
 os.exit(failures == 0)

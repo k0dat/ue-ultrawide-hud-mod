@@ -55,7 +55,7 @@ Finds the first `CanvasPanel` in the widget's tree (breadth-first from `WidgetTr
   a' = (orig.Min.X + a * (orig.Max.X - orig.Min.X) - new.Min.X) / (new.Max.X - new.Min.X)
   ```
 
-  where orig and new are the stretched child's anchors before and after. For a (0,1) container at ratio 0.5, an anchor of 0 becomes -0.5. The search runs once per container and its result is cached.
+  where orig and new are the stretched child's anchors before and after. For a (0,1) container at ratio 0.5, an anchor of 0 becomes -0.5. The targets are searched for breadth-first below the container, not entering nested UserWidgets. The result is cached per container once every name has been found. Until then the search runs again on each poll, since a game can create a target after the HUD appears. A cached target that is no longer valid, or has no slot because it was removed from its parent, clears the cache.
 
 ## 5. Configuration
 
@@ -77,7 +77,7 @@ The boxes are computed, not read from the engine, because `FGeometry` isn't refl
 
 ## 7. Error handling
 
-The poll and the dump each run inside one `pcall` that logs the error with the `[UEUltrawideHUDMod]` prefix. UObjects are checked with `IsValid()` where the game is known to hand back dead or null ones (widget instances, tree roots, slots, cached Unshift targets), and not elsewhere.
+The dump runs inside one `pcall`, and the poll inside one for each widget instance, so a widget that fails doesn't stop the others. The error is logged with the `[UEUltrawideHUDMod]` prefix, on every poll while it keeps failing. UObjects are checked with `IsValid()` where the game is known to hand back dead or null ones (widget instances, tree roots, slots, cached Unshift targets), and not elsewhere.
 
 ## 8. Findings from the reference games
 

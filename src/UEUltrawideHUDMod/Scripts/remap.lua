@@ -11,7 +11,7 @@ local EPSILON = 1e-4     -- anchors are 32-bit floats, so they don't read back e
 -- Anchors the game gave each slot or widget, keyed by full object name and saved the first time we
 -- see it. Every write is computed from these, so repeated polls never compound.
 local originals = {}
-local unshiftTargets = {} -- [container full name] = widgets named in cfg.unshift, searched once
+local unshiftTargets = {} -- [container full name] = widgets named in cfg.unshift, once all are found
 local classes = {}
 
 local function trace(fmt, ...)
@@ -82,16 +82,17 @@ local function remapViewport(widget, scaleX, clip)
     if clip and root then clipToBounds(root) end
 end
 
+-- Games can create an Unshift target after the HUD appears, so a search that misses one isn't
+-- cached and runs again on the next poll.
 local function unshiftWidgets(container, names)
     local key = container:GetFullName()
-    if not unshiftTargets[key] then
-        local found = {}
-        for _, wanted in ipairs(names) do
-            found[#found + 1] = find(container, function(w) return w:GetFName():ToString():lower() == wanted end)
-        end
-        unshiftTargets[key] = found
+    if unshiftTargets[key] then return unshiftTargets[key] end
+    local found = {}
+    for _, wanted in ipairs(names) do
+        found[#found + 1] = find(container, function(w) return w:GetFName():ToString():lower() == wanted end)
     end
-    return unshiftTargets[key]
+    if #found == #names then unshiftTargets[key] = found end
+    return found
 end
 
 -- `widget` is positioned by the game in full-screen coordinates, but sits inside a container that
@@ -117,7 +118,8 @@ local function remapChild(child, cfg, scaleX, clip)
     if clip then clipToBounds(child) end
     local key = child:GetFullName()
     for _, widget in ipairs(unshiftWidgets(child, cfg.unshift)) do
-        if widget:IsValid() then
+        -- A widget removed from its parent has no slot but stays valid until garbage collection.
+        if widget:IsValid() and M.isValid(widget.Slot) then
             unshift(widget, orig, new)
         else
             unshiftTargets[key] = nil -- the game rebuilt it; search again on the next poll
