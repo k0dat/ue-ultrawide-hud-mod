@@ -138,11 +138,13 @@ function M.reset(gameDir)
         ConvertToAbsolutePath = function(_, path) return fstring(path) end,
         ExecuteConsoleCommand = function(_, _, command) M.commands[#M.commands + 1] = command end,
     }
-    package.loaded.UEHelpers = { GetPlayerController = function() return controller end }
+    package.loaded.UEHelpers = {
+        GetPlayerController = function() return controller end,
+        GetKismetSystemLibrary = function() return systemLibrary end,
+    }
 
     function StaticFindObject(path)
         if path:find("Default__WidgetLayoutLibrary") then return layoutLibrary end
-        if path:find("Default__KismetSystemLibrary") then return systemLibrary end
         return classes[path:match("%.([%w_]+)$")]
     end
 

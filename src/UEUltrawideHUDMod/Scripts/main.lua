@@ -103,23 +103,42 @@ local function poll()
     end
 end
 
--- Takes a screenshot with the HUD and returns the path it will be saved to. The engine writes it a
--- frame later to <Saved>/Screenshots/WindowsNoEditor/, named ScreenShot00000.png upwards with the
--- first free number. Some games move Saved (System Shock: Saved Games\Nightdive Studios\SystemShock).
+local function exists(path)
+    local file = io.open(path, "r")
+    if file then file:close() end
+    return file ~= nil
+end
+
+-- The engine numbers screenshots from a counter that starts at 0 each session and skips files on
+-- disk. The mod mirrors it, because the PNG of a dump a few frames ago may not be on disk yet.
+local lastShot = -1
+
+-- Takes a screenshot with the HUD and returns the path it will be saved to, a frame later. UE4 saves
+-- to <Saved>/Screenshots/WindowsNoEditor/ (UE5 would use Windows/). Some games move Saved (System
+-- Shock: Saved Games\Nightdive Studios\SystemShock).
 local function takeScreenshot()
-    local system = StaticFindObject("/Script/Engine.Default__KismetSystemLibrary")
+    local system = UEHelpers.GetKismetSystemLibrary()
     local saved = system:ConvertToAbsolutePath(system:GetProjectSavedDirectory():ToString()):ToString()
     local dir = saved:gsub("\\", "/") .. "Screenshots/WindowsNoEditor/"
     local path
-    for i = 0, 99999 do
-        path = string.format("%sScreenShot%05d.png", dir, i)
-        local file = io.open(path, "r")
-        if not file then break end
-        file:close()
-    end
+    repeat
+        lastShot = lastShot + 1
+        path = dir .. string.format("ScreenShot%05d.png", lastShot)
+    until not exists(path)
     local controller = UEHelpers.GetPlayerController()
     system:ExecuteConsoleCommand(controller, "shot showui", controller)
     return path
+end
+
+-- widgets_<date>_<time>, with a number added for a second dump in the same second.
+local function dumpBase()
+    local base = MOD_DIR .. os.date("widgets_%Y%m%d_%H%M%S")
+    local name, n = base, 1
+    while exists(name .. ".txt") do
+        n = n + 1
+        name = base .. "_" .. n
+    end
+    return name
 end
 
 local function dump()
@@ -130,12 +149,17 @@ local function dump()
         "UEUltrawideHUDMod widget dump, %s\nViewport %.0fx%.0f, virtual aspect %.4f, virtual area is %.1f%% of the width\n"
             .. "Top-level widgets in the viewport. A profile section is named after the widget's class (first word).",
         os.date("%Y-%m-%d %H:%M:%S"), size.X, size.Y, config.aspect, ratio * 100)
+    local base = dumpBase()
+    local boxes, err = Dump.writeText(base .. ".txt", header)
+    if not boxes then return log("dump failed: %s", err) end
+    log("dump written to %s.txt", base)
+
     -- Widgets are laid out in Slate units: pixels divided by the DPI scale.
     local scale = StaticFindObject(LAYOUT_LIBRARY):GetViewportScale(UEHelpers.GetPlayerController())
     local view = { width = size.X / scale, height = size.Y / scale, ratio = ratio, screenshot = takeScreenshot() }
-    local base, err = Dump.write(MOD_DIR .. os.date("widgets_%Y%m%d_%H%M%S"), header, view)
-    if not base then return log("dump failed: %s", err) end
-    log("dump written to %s.txt and %s.svg, screenshot %s", base, base, view.screenshot)
+    local _, svgErr = Dump.writeSvg(base .. ".svg", view, boxes)
+    if svgErr then return log("svg failed: %s", svgErr) end
+    log("svg written to %s.svg, screenshot %s", base, view.screenshot)
 end
 
 -- Reports an error from a callback instead of letting it escape into UE4SS.
