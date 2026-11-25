@@ -45,7 +45,7 @@ This is not a mission-critical application.
 src/UEUltrawideHUDMod/     the mod folder, copied into ue4ss/Mods/
   enabled.txt
   Scripts/
-    main.lua               profile loading, poll loop, Ctrl+Del hotkey
+    main.lua               profile loading, poll loop, Ctrl+Del dump (file names, screenshot)
     remap.lua              viewport and anchors methods, Unshift
     dump.lua               widget tree dump, as text and SVG
     svg.lua                minimal SVG writer

@@ -81,7 +81,7 @@ The dump runs inside one `pcall`, and the poll inside one for each widget instan
 
 ## 8. Findings from the reference games
 
-Both run UE 4.27.2. These come from in-game runs of the first implementation.
+Both run UE 4.27.2. Most of these come from in-game runs of the first implementation; the SVG dump findings come from the current one.
 
 **UE4SS API**
 

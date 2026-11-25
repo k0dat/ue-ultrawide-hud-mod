@@ -2,7 +2,7 @@
 
 A [UE4SS](https://github.com/UE4SS-RE/RE-UE4SS) Lua mod for Unreal Engine games. On an ultrawide screen it moves the HUD horizontally into a centred virtual aspect-ratio area (16:9 by default), so health, ammo and minimaps sit near the middle of the screen instead of at its far edges.
 
-Tested on UE 4.27 with Echo Point Nova and System Shock (2023). See [COMPATIBILITY.md](COMPATIBILITY.md) for the games with profiles. UE5 is untested. The mod is meant for single-player, offline use: injecting UE4SS into a game with anti-cheat can get you banned.
+Tested on UE 4.27 with Echo Point Nova, Redout: Enhanced Edition and System Shock (2023). See [COMPATIBILITY.md](COMPATIBILITY.md) for the games with profiles. UE5 is untested. The mod is meant for single-player, offline use: injecting UE4SS into a game with anti-cheat can get you banned.
 
 ## Install (games listed in COMPATIBILITY.md)
 
@@ -59,7 +59,7 @@ The `_C` suffix on the class name is optional. Child names are not case-sensitiv
 - **viewport** shrinks the whole widget into the virtual area. Use it when the widget holds only HUD elements (Echo Point Nova).
 - **anchors** moves each direct child of the widget's first Canvas Panel. Use it when the widget also holds things that must stay full-screen, such as a pause menu or damage overlay, and list those in `Exclude` (System Shock).
 
-With `anchors`, a child that stretches across the screen becomes a container the width of the virtual area. If the game places something inside it using full-screen coordinates (System Shock's selection box), it ends up shifted sideways. Name it in `Unshift` to put it back.
+With `anchors`, a child that stretches across the screen becomes a container the width of the virtual area. If the game places something inside it using full-screen coordinates (System Shock's selection box), it ends up shifted sideways. Name it in `Unshift` to put it back. A widget inside a nested UserWidget can't be named, since the search doesn't go into those.
 
 ## Known limitations
 
